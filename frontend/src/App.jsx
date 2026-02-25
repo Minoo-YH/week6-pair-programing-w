@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import BookPage from "./pages/BookPage";
 
 // pages & components
 import Home from "./pages/HomePage";
@@ -16,6 +17,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/add-book" element={<AddBookPage />} />
             <Route path="*" element={<NotFoundPage />} />
+            <Route path="/books/:id" element={<BookPage />} />
           </Routes>
         </div>
       </BrowserRouter>
