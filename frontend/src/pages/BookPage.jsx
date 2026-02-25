@@ -26,6 +26,27 @@ const BookPage = () => {
     fetchBook();
   }, [id]);
 
+  const deleteBook = async (bookId) => {
+    try {
+      const res = await fetch(`/api/books/${bookId}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete book");
+      }
+    } catch (error) {
+      console.error("Error deleting book:", error);
+    }
+
+    return navigate("/");
+  };
+
+  const onDeleteClick = (bookId) => {
+    const confirm = window.confirm("Are you sure you want to delete this book?");
+    if (!confirm) return;
+    deleteBook(bookId);
+  };
+
   return (
     <div>
       {loading && <p>Loading...</p>}
@@ -57,6 +78,10 @@ const BookPage = () => {
 
       <button onClick={() => navigate("/")}>
         Back
+      </button>
+
+      <button onClick={() => onDeleteClick(book._id)}>
+        Delete
       </button>
     </div>
   );
