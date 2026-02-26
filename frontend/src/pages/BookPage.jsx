@@ -1,19 +1,24 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-const BookPage = () => {
+const BookPage = ({ isAuthenticated }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  //  localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user ? user.token : null;
 
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // book detail fetching
   useEffect(() => {
     const fetchBook = async () => {
       try {
         const res = await fetch(`/api/books/${id}`);
-        if (!res.ok) throw new Error("Network response was not ok");
+        if (!res.ok) throw new Error("Failed to fetch book");
         const data = await res.json();
         setBook(data);
       } catch (err) {
@@ -26,67 +31,78 @@ const BookPage = () => {
     fetchBook();
   }, [id]);
 
+  // delete book
   const deleteBook = async (bookId) => {
     try {
       const res = await fetch(`/api/books/${bookId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔥 مهم
+        },
       });
+
       if (!res.ok) {
         throw new Error("Failed to delete book");
       }
+
+      navigate("/");
     } catch (error) {
       console.error("Error deleting book:", error);
     }
-
-    return navigate("/");
   };
 
   const onDeleteClick = (bookId) => {
-    const confirm = window.confirm("Are you sure you want to delete this book?");
-    if (!confirm) return;
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this book?"
+    );
+    if (!confirmDelete) return;
     deleteBook(bookId);
   };
 
   return (
-    <div>
+    <div className="book-details">
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
       {book && (
         <div>
           <h2>{book.title}</h2>
-          <p>Author: {book.author}</p>
-          <p>ISBN: {book.isbn}</p>
-          <p>Publisher: {book.publisher}</p>
-          <p>Genre: {book.genre}</p>
+          <p><strong>Author:</strong> {book.author}</p>
+          <p><strong>ISBN:</strong> {book.isbn}</p>
+          <p><strong>Publisher:</strong> {book.publisher}</p>
+          <p><strong>Genre:</strong> {book.genre}</p>
           <p>
-            Available:{" "}
+            <strong>Available:</strong>{" "}
             {book.availability?.isAvailable ? "Yes" : "No"}
           </p>
           <p>
-            Due Date:{" "}
+            <strong>Due Date:</strong>{" "}
             {book.availability?.dueDate
               ? new Date(book.availability.dueDate).toLocaleDateString()
               : "—"}
           </p>
           <p>
-            Borrower:{" "}
+            <strong>Borrower:</strong>{" "}
             {book.availability?.borrower || "—"}
           </p>
         </div>
       )}
 
-      <button onClick={() => navigate("/")}>
-        Back
-      </button>
+     
+      <button onClick={() => navigate("/")}>Back</button>
 
-      <button onClick={() => onDeleteClick(book._id)}>
-        Delete
-      </button>
+   
+      {book && isAuthenticated && (
+        <>
+          <button onClick={() => navigate(`/edit-book/${book._id}`)}>
+            Edit
+          </button>
 
-      <button onClick={() => navigate(`/edit-book/${book._id}`)}>
-        Edit
-      </button>
+          <button onClick={() => onDeleteClick(book._id)}>
+            Delete
+          </button>
+        </>
+      )}
     </div>
   );
 };
